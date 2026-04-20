@@ -5,7 +5,12 @@ use dotenvy::dotenv;
 use log::info;
 
 mod lib;
+mod models;
+mod ingester;
+
 use crate::lib::*;
+use crate::models::GlobalThreat;
+use crate::ingester::*;
 
 #[derive(Serialize)]
 struct QuantumHealth {
@@ -66,6 +71,18 @@ async fn ingest_threat(threat: web::Json<ThreatData>) -> impl Responder {
     })
 }
 
+#[get("/pakistan-threats")]
+async fn pakistan_threats() -> impl Responder {
+    let results = get_stored_threats().await;
+    HttpResponse::Ok().json(results)
+}
+
+#[post("/ingest-pakistan")]
+async fn trigger_ingest_pakistan() -> impl Responder {
+    let results = ingest_pakistan().await;
+    HttpResponse::Ok().json(results)
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
@@ -81,6 +98,8 @@ async fn main() -> std::io::Result<()> {
             .service(quantum_health)
             .service(health)
             .service(ingest_threat)
+            .service(pakistan_threats)
+            .service(trigger_ingest_pakistan)
     })
     .bind(addr)?
     .run()

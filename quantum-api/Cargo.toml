@@ -17,3 +17,10 @@ redis = { version = "0.25", features = ["tokio-comp"] }
 dotenvy = "0.15"
 log = "0.4"
 env_logger = "0.11"
+twitter-v2 = "0.1.8"
+reqwest = { version = "0.12", features = ["json"] }
+xml-rs = "0.8"
+scraper = "0.20"
+futures-util = "0.3"
+tokio-stream = "0.1"
+chrono = { version = "0.4", features = ["serde"] }
