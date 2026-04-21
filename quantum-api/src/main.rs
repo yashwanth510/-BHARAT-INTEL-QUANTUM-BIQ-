@@ -7,10 +7,13 @@ use log::info;
 mod lib;
 mod models;
 mod ingester;
+mod china_ingester;
+mod predictor;
 
 use crate::lib::*;
-use crate::models::GlobalThreat;
 use crate::ingester::*;
+use crate::china_ingester::*;
+use crate::predictor::*;
 
 #[derive(Serialize)]
 struct QuantumHealth {
@@ -83,6 +86,34 @@ async fn trigger_ingest_pakistan() -> impl Responder {
     HttpResponse::Ok().json(results)
 }
 
+#[get("/china-threats")]
+async fn china_threats() -> impl Responder {
+    let results = get_stored_china_threats().await;
+    HttpResponse::Ok().json(results)
+}
+
+#[post("/ingest-china")]
+async fn trigger_ingest_china() -> impl Responder {
+    let results = ingest_china().await;
+    HttpResponse::Ok().json(results)
+}
+
+#[get("/predict")]
+async fn predict() -> impl Responder {
+    let threats = get_stored_china_threats().await;
+    let prediction = predict_attack(&threats);
+    HttpResponse::Ok().json(prediction)
+}
+
+#[get("/cross-border")]
+async fn cross_border() -> impl Responder {
+    let pak = get_stored_threats().await;
+    let china = get_stored_china_threats().await;
+    let mut fused = pak;
+    fused.extend(china);
+    HttpResponse::Ok().json(fused)
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
@@ -100,6 +131,10 @@ async fn main() -> std::io::Result<()> {
             .service(ingest_threat)
             .service(pakistan_threats)
             .service(trigger_ingest_pakistan)
+            .service(china_threats)
+            .service(trigger_ingest_china)
+            .service(predict)
+            .service(cross_border)
     })
     .bind(addr)?
     .run()
