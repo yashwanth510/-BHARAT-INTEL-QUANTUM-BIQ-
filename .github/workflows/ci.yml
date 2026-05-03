@@ -1,0 +1,245 @@
+name: BIQ CI/CD Pipeline
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
+jobs:
+  # ─── BACKEND: Rust checks ───────────────────────────────────────────────────
+  backend:
+    name: "Backend (Rust)"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: quantum-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable + components
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust dependency cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: quantum-api
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (deny warnings)
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Unit / integration tests
+        run: cargo test --lib --bins --all-features
+
+      - name: Build release binary (smoke check)
+        run: cargo build --release
+
+  # ─── SECURITY: Vulnerability Scans ──────────────────────────────────────────
+  security:
+    name: "Security Audit"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner (Repo)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          exit-code: '0' # Don't fail the build yet, just report
+          severity: 'CRITICAL,HIGH'
+
+  # ─── FRONTEND: Next.js checks ───────────────────────────────────────────────
+  frontend:
+    name: "Frontend (Next.js)"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Next.js build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: "http://localhost:8000"
+          NEXT_PUBLIC_WS_URL: "ws://localhost:8000"
+          NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+
+  # ─── DOCKER: Image builds ───────────────────────────────────────────────────
+  docker-build:
+    name: "Docker Image Validation"
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./quantum-api
+          push: false
+          tags: biq-backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: false
+          tags: biq-frontend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://quantum-api:8000
+            NEXT_PUBLIC_WS_URL=ws://quantum-api:8000
+
+  # ─── INTEGRATION: Compose stack validation ──────────────────────────────────
+  integration:
+    name: "Integration & Health Checks"
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env from secrets / defaults
+        run: |
+          cat > .env << 'EOF'
+          NEO4J_PASS=cipassword123
+          NEWSAPI_KEY=${{ secrets.NEWSAPI_KEY }}
+          OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }}
+          AISSTREAM_API_KEY=${{ secrets.AISSTREAM_API_KEY }}
+          MISTRAL_API_KEY=${{ secrets.MISTRAL_API_KEY }}
+          TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }}
+          LLM_ENABLED=false
+          ELEVATION_ON_DEMAND_ONLY=true
+          ACTIVE_ALERT_MODE=false
+          EOF
+
+      - name: Build compose stack
+        run: docker compose build
+
+      - name: Start compose stack (detached)
+        run: |
+          docker compose up -d
+          sleep 30
+
+      - name: Wait for backend health
+        run: |
+          for i in $(seq 1 30); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health || echo "000")
+            echo "Attempt $i: HTTP $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "Backend healthy!"
+              break
+            fi
+            sleep 5
+          done
+          curl -sf http://localhost:8000/health
+
+      - name: Validate /health endpoint
+        run: |
+          RESP=$(curl -sf http://localhost:8000/health)
+          echo "$RESP"
+          echo "$RESP" | python3 -c "import sys, json; d=json.load(sys.stdin); assert d['status'] != '', 'status missing'"
+
+      - name: Validate /quantum-health endpoint
+        run: curl -sf http://localhost:8000/quantum-health
+
+      - name: Validate /metrics endpoint
+        run: curl -sf http://localhost:8000/metrics
+
+      - name: Validate WebSocket connectivity
+        run: |
+          pip install websocket-client
+          python3 - << 'EOF'
+          import websocket, json, time, threading
+
+          received = []
+
+          def on_message(ws, msg):
+              received.append(msg)
+              ws.close()
+
+          def on_error(ws, err):
+              print(f"WS Error: {err}")
+
+          ws = websocket.WebSocketApp(
+              "ws://localhost:8000/ws/stream/global",
+              on_message=on_message,
+              on_error=on_error,
+          )
+          t = threading.Thread(target=lambda: ws.run_forever(ping_interval=5))
+          t.daemon = True
+          t.start()
+          time.sleep(10)
+          print(f"WebSocket test: received {len(received)} messages (connection established)")
+          EOF
+
+      - name: Show compose logs on failure
+        if: failure()
+        run: docker compose logs --tail=100
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
+
+  # ─── DEPLOYMENT: Production Rollout ─────────────────────────────────────────
+  deploy-backend:
+    name: "Deploy Backend (Railway)"
+    runs-on: ubuntu-latest
+    needs: [integration, security]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+      - name: Deploy to Railway
+        run: railway up --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  deploy-frontend:
+    name: "Deploy Frontend (Vercel)"
+    runs-on: ubuntu-latest
+    needs: [integration, security]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./frontend

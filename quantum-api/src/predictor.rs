@@ -1,5 +1,6 @@
 use crate::models::GlobalThreat;
 use serde::Serialize;
+use chrono::{Utc, Duration};
 
 #[derive(Serialize)]
 pub struct Prediction {
@@ -9,12 +10,23 @@ pub struct Prediction {
 }
 
 pub fn predict_attack(threats: &Vec<GlobalThreat>) -> Prediction {
-    // ML Stub: Likelihood based on active threats
-    let base_score = if threats.is_empty() { 45.0 } else { 87.0 };
+    let base_score = if threats.is_empty() { 15.0 } else { 
+        let mut score = 40.0;
+        for t in threats {
+            score += t.confidence * 10.0;
+        }
+        score.min(99.0)
+    };
+    
+    let target = if threats.iter().any(|t| t.country == "CN") {
+        "Ladakh border".to_string()
+    } else {
+        "Siachen border".to_string()
+    };
     
     Prediction {
         likelihood: base_score,
-        date: "2026-05-15".to_string(),
-        target: "Siachen border".to_string(),
+        date: (Utc::now() + Duration::days(5)).format("%Y-%m-%d").to_string(),
+        target,
     }
 }

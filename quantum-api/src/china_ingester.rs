@@ -3,9 +3,10 @@ use crate::models::GlobalThreat;
 use chrono::Utc;
 use xml::reader::{EventReader, XmlEvent};
 use std::io::Cursor;
-use log::{info, error};
+use log::error;
+use redis::AsyncCommands;
 
-pub async fn ingest_china() -> Vec<GlobalThreat> {
+pub async fn ingest_china(redis_url: &str) -> Vec<GlobalThreat> {
     let mut threats = Vec::new();
     let timestamp = Utc::now().to_rfc3339();
 
@@ -51,15 +52,7 @@ pub async fn ingest_china() -> Vec<GlobalThreat> {
             }
         }
         Err(e) => {
-            error!("Failed to fetch Global Times RSS: {}. Using fallback for demo.", e);
-            threats.push(GlobalThreat {
-                actor: "PLA Ladakh".to_string(),
-                country: "CN".to_string(),
-                confidence: 0.88,
-                sources: vec!["Global Times: RSS Source (Demonstration Fallback)".to_string()],
-                location: Some("Ladakh Border".to_string()),
-                timestamp: timestamp.clone(),
-            });
+            error!("Failed to fetch Global Times RSS: {}.", e);
         }
     }
 
@@ -93,30 +86,26 @@ pub async fn ingest_china() -> Vec<GlobalThreat> {
         }
     }
 
-    info!("Persisting {} China threats to Neo4j GNN...", threats.len());
-    // Neo4j: (:Country {name:"China"})-[:BORDER_THREAT]->(:Location {name:"Ladakh"})
-
-    if threats.is_empty() {
-        threats.push(GlobalThreat {
-            actor: "PLA Ladakh".to_string(),
-            country: "CN".to_string(),
-            confidence: 0.88,
-            sources: vec!["Global Times: RSS Source (Demonstration Fallback)".to_string(), "NewsAPI".to_string()],
-            location: Some("Ladakh Border".to_string()),
-            timestamp: timestamp.clone(),
-        });
+    if let Ok(client) = redis::Client::open(redis_url) {
+        if let Ok(mut conn) = client.get_multiplexed_async_connection().await {
+            if let Ok(payload) = serde_json::to_string(&threats) {
+                let _: Result<(), _> = conn.set_ex("cache:china:latest", payload, 3600).await;
+            }
+        }
     }
 
     threats
 }
 
-pub async fn get_stored_china_threats() -> Vec<GlobalThreat> {
-    vec![GlobalThreat {
-        actor: "PLA Ladakh".to_string(),
-        country: "CN".to_string(),
-        confidence: 0.88,
-        sources: vec!["Global Times".to_string(), "NewsAPI".to_string()],
-        location: Some("Ladakh Border".to_string()),
-        timestamp: Utc::now().to_rfc3339(),
-    }]
+pub async fn get_stored_china_threats(redis_url: &str) -> Vec<GlobalThreat> {
+    if let Ok(client) = redis::Client::open(redis_url) {
+        if let Ok(mut conn) = client.get_multiplexed_async_connection().await {
+            if let Ok(Some(data)) = conn.get::<_, Option<String>>("cache:china:latest").await {
+                if let Ok(threats) = serde_json::from_str(&data) {
+                    return threats;
+                }
+            }
+        }
+    }
+    vec![]
 }
