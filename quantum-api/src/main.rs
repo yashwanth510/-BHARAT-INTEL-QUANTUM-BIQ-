@@ -3,7 +3,7 @@ use actix_cors::Cors;
 use serde::{Deserialize, Serialize};
 use std::env;
 use dotenvy::dotenv;
-use log::info;
+use log::{info, warn};
 use chrono::Utc;
 use neo4rs::Graph;
 use redis::AsyncCommands;
