@@ -4,7 +4,7 @@
  * All calls include timeout + error normalisation.
  */
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? "https://bharat-intel-quantum-biq-production.up.railway.app";
 const TIMEOUT_MS = 15_000;
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
