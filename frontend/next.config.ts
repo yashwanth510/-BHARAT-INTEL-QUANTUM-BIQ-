@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
   turbopack: {},
 
   // Standalone output for Docker/nginx deployment
-  output: "standalone",
+  // Disabled on Vercel to avoid Routes Manifest errors in monorepos
+  output: process.env.VERCEL ? undefined : "standalone",
 
   // API rewrites — frontend proxies to backend (avoids CORS in dev)
   async rewrites() {
