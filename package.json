@@ -2,11 +2,9 @@
   "name": "biq-monorepo",
   "private": true,
   "workspaces": [
-    "frontend",
-    "quantum-api"
+    "frontend"
   ],
   "scripts": {
-    "build": "npm run build --workspace=frontend",
-    "install": "npm install"
+    "build": "npm run build --workspace=frontend"
   }
 }
