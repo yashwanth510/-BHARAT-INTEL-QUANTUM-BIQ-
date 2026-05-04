@@ -878,6 +878,16 @@ fn validate_production_config() {
         if neo4j_uri.is_empty() {
             panic!("[PRODUCTION] NEO4J_URI is required in production for Intelligence Graph");
         }
+
+        // Kafka safety check
+        let kafka_enabled = env::var("KAFKA_ENABLED").unwrap_or_default() == "true";
+        if kafka_enabled {
+            let kafka_servers = env::var("KAFKA_SERVERS").unwrap_or_default();
+            if kafka_servers.is_empty() || kafka_servers.contains("localhost") {
+                panic!("[PRODUCTION] KAFKA_ENABLED=true but KAFKA_SERVERS is empty or points to localhost. This will cause a crash.");
+            }
+        }
+
         log::info!("[PRODUCTION] Safety checks passed");
     }
 }
@@ -899,21 +909,31 @@ async fn main() -> std::io::Result<()> {
     let neo4j_pass = env::var("NEO4J_PASS").unwrap_or_else(|_| "password123".to_string());
     let ws_hub = WsHub::new();
 
-    // Initialize EventBus (Kafka or Noop based on feature)
-    #[cfg(feature = "kafka")]
-    let event_bus: Option<std::sync::Arc<dyn EventBus>> = {
-        use crate::services::event_bus::KafkaBus;
-        KafkaBus::new(&kafka_servers)
-            .ok()
-            .map(|b| std::sync::Arc::new(b) as std::sync::Arc<dyn EventBus>)
-    };
-    
-    #[cfg(not(feature = "kafka"))]
-    let event_bus: Option<std::sync::Arc<dyn EventBus>> = {
-        use crate::services::event_bus::NoopBus;
-        NoopBus::new(&kafka_servers)
-            .ok()
-            .map(|b| std::sync::Arc::new(b) as std::sync::Arc<dyn EventBus>)
+    // Initialize EventBus (Kafka or Noop based on KAFKA_ENABLED)
+    let kafka_enabled = env::var("KAFKA_ENABLED").unwrap_or_else(|_| "false".to_string()) == "true";
+    let event_bus: Option<std::sync::Arc<dyn EventBus>> = if kafka_enabled {
+        #[cfg(feature = "kafka")]
+        {
+            use crate::services::event_bus::KafkaBus;
+            match KafkaBus::new(&kafka_servers) {
+                Ok(bus) => {
+                    info!("Kafka EventBus initialized successfully");
+                    Some(std::sync::Arc::new(bus) as std::sync::Arc<dyn EventBus>)
+                }
+                Err(e) => {
+                    warn!("Failed to initialize KafkaBus: {}. Falling back to NoopBus", e);
+                    Some(std::sync::Arc::new(crate::services::event_bus::NoopBus::new()) as std::sync::Arc<dyn EventBus>)
+                }
+            }
+        }
+        #[cfg(not(feature = "kafka"))]
+        {
+            warn!("Kafka feature is disabled at compile time. Falling back to NoopBus");
+            Some(std::sync::Arc::new(crate::services::event_bus::NoopBus::new()) as std::sync::Arc<dyn EventBus>)
+        }
+    } else {
+        info!("Kafka is disabled via KAFKA_ENABLED=false. Using NoopBus");
+        Some(std::sync::Arc::new(crate::services::event_bus::NoopBus::new()) as std::sync::Arc<dyn EventBus>)
     };
 
     let state = web::Data::new(AppState {

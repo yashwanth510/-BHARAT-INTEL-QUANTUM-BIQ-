@@ -1,4 +1,5 @@
 use serde::Serialize;
+use log::{info, warn};
 
 pub trait EventBus: Send + Sync {
     fn publish(&self, topic: &str, key: &str, payload: &str);
@@ -12,6 +13,7 @@ pub struct KafkaBus {
 #[cfg(feature = "kafka")]
 impl KafkaBus {
     pub fn new(brokers: &str) -> Result<Self, String> {
+        info!("Initializing KafkaBus with brokers: {}", brokers);
         let producer = crate::services::kafka::build_producer(brokers)?;
         Ok(Self { producer })
     }
@@ -30,19 +32,16 @@ impl EventBus for KafkaBus {
     }
 }
 
-#[cfg(not(feature = "kafka"))]
 pub struct NoopBus;
 
-#[cfg(not(feature = "kafka"))]
 impl NoopBus {
-    pub fn new(_brokers: &str) -> Result<Self, String> {
-        Ok(Self)
+    pub fn new() -> Self {
+        Self
     }
 }
 
-#[cfg(not(feature = "kafka"))]
 impl EventBus for NoopBus {
     fn publish(&self, topic: &str, _key: &str, payload: &str) {
-        println!("[EventBus] {}: {}", topic, payload);
+        warn!("[EventBus-OFF] Would publish to {}: {}", topic, payload);
     }
 }
