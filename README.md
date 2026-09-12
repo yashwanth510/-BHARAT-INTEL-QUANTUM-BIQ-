@@ -147,7 +147,7 @@ In the **existing** Vercel project's Settings:
 
 Set these variables for **Production** (and Preview if used), then **Redeploy the latest commit**. Next.js embeds public variables at build time: changing them requires a redeploy. A Vercel build now fails clearly if its API URL is missing/local, or its explicit WebSocket URL points at a different host.
 
-On Render, `CORS_ORIGINS` defaults to the existing `https://bharat-intel-quantum-biq.vercel.app`. If the actual production/custom domain differs, add its exact origin, comma-separated. Preview domains also need explicit CORS entries. Provider keys and write tokens belong only in Render, never in `NEXT_PUBLIC_*` variables.
+The backend always allows `https://bharat-intel-quantum-biq.vercel.app` and `https://bharat-intel-quantum-biq-frontend.vercel.app`, including when Render has an older `CORS_ORIGINS` value. Additional production/custom domains can be added through `CORS_ORIGINS`, comma-separated. Removing either built-in domain requires a code change. Preview domains also need explicit CORS entries. Provider keys and write tokens belong only in Render, never in `NEXT_PUBLIC_*` variables.
 
 ### 3. Verify the live connection
 

@@ -86,16 +86,34 @@ fn opt_env(key: &str) -> Option<String> {
     env::var(key).ok().filter(|v| !v.trim().is_empty())
 }
 
+// These deployed frontends remain allowed even if Render has an older env value.
+fn cors_origins(configured: &str) -> Vec<String> {
+    let mut origins: Vec<String> = configured
+        .split(',')
+        .map(str::trim)
+        .filter(|origin| !origin.is_empty())
+        .map(str::to_owned)
+        .collect();
+    for origin in [
+        "https://bharat-intel-quantum-biq.vercel.app",
+        "https://bharat-intel-quantum-biq-frontend.vercel.app",
+    ] {
+        if !origins.iter().any(|existing| existing == origin) {
+            origins.push(origin.to_owned());
+        }
+    }
+    origins
+}
+
 impl Config {
     pub fn from_env() -> Result<Self> {
         Ok(Self {
             admin_api_token: opt_env("ADMIN_API_TOKEN"),
             gps_webhook_token: opt_env("GPS_WEBHOOK_TOKEN"),
-            cors_origins: env::var("CORS_ORIGINS")
-                .unwrap_or_else(|_| "http://localhost:3000,http://127.0.0.1:3000".into())
-                .split(',')
-                .map(|s| s.trim().to_string())
-                .collect(),
+            cors_origins: cors_origins(
+                &env::var("CORS_ORIGINS")
+                    .unwrap_or_else(|_| "http://localhost:3000,http://127.0.0.1:3000".into()),
+            ),
             ingest_enabled: env::var("INGEST_ENABLED").unwrap_or_else(|_| "true".into()) != "false",
             border_data_dir: env::var("BORDER_DATA_DIR").unwrap_or_else(|_| {
                 if std::path::Path::new("data/borders").is_dir() {
@@ -165,5 +183,21 @@ impl Config {
                 .parse()
                 .unwrap_or(45),
         })
+    }
+}
+
+#[cfg(test)]
+mod cors_tests {
+    #[test]
+    fn stale_environment_keeps_both_deployed_frontends_allowed() {
+        let origins = super::cors_origins(
+            " https://bharat-intel-quantum-biq.vercel.app, ,https://custom.example ",
+        );
+        assert_eq!(origins.len(), 3);
+        assert!(
+            origins.contains(&"https://bharat-intel-quantum-biq-frontend.vercel.app".to_owned())
+        );
+        assert!(origins.contains(&"https://custom.example".to_owned()));
+        assert!(!origins.contains(&"*".to_owned()));
     }
 }

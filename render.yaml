@@ -17,7 +17,7 @@ services:
           name: biq-cache
           property: connectionString
       - key: CORS_ORIGINS
-        value: https://bharat-intel-quantum-biq.vercel.app
+        value: https://bharat-intel-quantum-biq.vercel.app,https://bharat-intel-quantum-biq-frontend.vercel.app
       - key: RUST_LOG
         value: info
       - key: ADMIN_API_TOKEN
