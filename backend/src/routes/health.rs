@@ -20,6 +20,7 @@ pub async fn handler(State(state): State<Arc<AppState>>) -> (StatusCode, Json<Va
             "gps",
             cfg.gps_api_key.is_some() && cfg.gps_api_base_url.is_some(),
         ),
+        ("geoapify", cfg.geoapify_api_key.is_some()),
         ("openweather", cfg.openweather_api_key.is_some()),
         (
             "sentinel",

@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -28,9 +28,7 @@ pub async fn search(
         .send()
         .await?;
 
-    if !resp.status().is_success() {
-        bail!("Tavily error: {}", resp.status());
-    }
+    let resp = resp.error_for_status()?;
 
     #[derive(Deserialize)]
     struct TavilyResp {

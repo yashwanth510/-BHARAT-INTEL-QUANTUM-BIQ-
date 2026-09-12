@@ -41,22 +41,36 @@ async fn run(state: Arc<AppState>) {
                 .is_none_or(|(_, expiry)| std::time::Instant::now() >= *expiry)
             {
                 let response = client.post("https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token").form(&[("grant_type", "client_credentials"), ("client_id", id.as_str()), ("client_secret", secret.as_str())]).send().await;
-                if let Ok(resp) = response {
-                    if resp.status().is_success() {
-                        if let Ok(data) = resp.json::<serde_json::Value>().await {
-                            if let Some(value) = data["access_token"].as_str() {
-                                token = Some((
-                                    value.into(),
-                                    std::time::Instant::now()
-                                        + Duration::from_secs(
-                                            data["expires_in"]
-                                                .as_u64()
-                                                .unwrap_or(300)
-                                                .saturating_sub(30),
-                                        ),
-                                ));
-                            }
-                        }
+                token = None;
+                let outcome = async {
+                    response?
+                        .error_for_status()?
+                        .json::<serde_json::Value>()
+                        .await
+                }
+                .await;
+                match outcome {
+                    Ok(data) if data["access_token"].as_str().is_some() => {
+                        token = Some((
+                            data["access_token"].as_str().unwrap().into(),
+                            std::time::Instant::now()
+                                + Duration::from_secs(
+                                    data["expires_in"]
+                                        .as_u64()
+                                        .unwrap_or(300)
+                                        .saturating_sub(30),
+                                ),
+                        ));
+                    }
+                    result => {
+                        let detail = match result {
+                            Err(error) => crate::error::http_detail(&error),
+                            Ok(_) => "Token missing from OAuth response".into(),
+                        };
+                        let detail = format!("OAuth: {detail}");
+                        tracing::warn!(provider = "opensky", %detail, "Token request failed");
+                        state.provider_result("opensky", false, &detail).await;
+                        continue;
                     }
                 }
             }

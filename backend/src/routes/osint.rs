@@ -48,13 +48,16 @@ pub async fn handler(
         return Err(AppError::RateLimited);
     }
     let client = &state.http;
-    let results = tavily::search(&client, api_key, &query, 5)
-        .await
-        .map_err(|_| {
-            AppError::ProviderUnavailable(
-                "tavily request failed; check credentials, quota, and endpoint".into(),
-            )
-        })?;
+    let outcome = tavily::search(&client, api_key, &query, 5).await;
+    let results = match outcome {
+        Ok(value) => value,
+        Err(error) => {
+            let detail = crate::error::provider_detail(&error);
+            tracing::warn!(provider = "tavily", %detail, "Provider request failed");
+            state.provider_result("tavily", false, &detail).await;
+            return Err(AppError::ProviderUnavailable(format!("tavily: {detail}")));
+        }
+    };
 
     state
         .provider_result("tavily", true, "Response received")

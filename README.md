@@ -201,3 +201,23 @@ AISstream permits three subscribed connections per account and three open
 connections per originating IP. Stop unused local or old hosted consumers when
 investigating limits. A reset alone does not establish that a key is invalid or
 that Render is blocked. See [AISstream's limits and troubleshooting](https://aisstream.io/documentation).
+
+### Provider diagnosis and local dotenv syntax
+
+Quote values containing spaces in local `.env` files, especially an OpenSky
+client ID. The backend now stops with a safe syntax error if dotenv parsing
+fails, rather than silently starting with only some provider settings loaded.
+Render dashboard values should be entered directly, without dotenv quotes.
+
+Sentinel, Tavily, Geoapify and OpenSky OAuth failures now report sanitized HTTP
+status codes or timeout/connection categories in the logs and provider health.
+Provider response bodies, tokens and URLs containing keys are not included.
+A status of 401/403 indicates an upstream rejection; a timeout alone does not
+prove that credentials are invalid. Geoapify is also included in `/health`.
+
+On 2026-09-12, local checks after correcting dotenv syntax returned aircraft,
+weather, reverse-geocoded location, a Sentinel image and five Tavily results.
+The concurrent Render checks returned weather successfully, reported an
+AISstream position success, but failed OpenSky OAuth, Geoapify, Sentinel and
+Tavily. These observations do not establish a single shared root cause for the
+remote failures; deploy the diagnostics and inspect each provider separately.

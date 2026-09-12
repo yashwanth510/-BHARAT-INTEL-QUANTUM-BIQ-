@@ -40,7 +40,7 @@ pub async fn handler(
         })?;
 
     let client = &state.http;
-    let snap = sentinel::fetch_snapshot(
+    let outcome = sentinel::fetch_snapshot(
         &client,
         client_id,
         client_secret,
@@ -50,12 +50,16 @@ pub async fn handler(
         req.lon,
         req.bbox_deg.unwrap_or(0.1),
     )
-    .await
-    .map_err(|_| {
-        AppError::ProviderUnavailable(
-            "sentinel request failed; check credentials, quota, and endpoint".into(),
-        )
-    })?;
+    .await;
+    let snap = match outcome {
+        Ok(value) => value,
+        Err(error) => {
+            let detail = crate::error::provider_detail(&error);
+            tracing::warn!(provider = "sentinel", %detail, "Provider request failed");
+            state.provider_result("sentinel", false, &detail).await;
+            return Err(AppError::ProviderUnavailable(format!("sentinel: {detail}")));
+        }
+    };
 
     state
         .provider_result("sentinel", true, "Response received")

@@ -24,7 +24,13 @@ use state::AppState;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenvy::dotenv().ok();
+    match dotenvy::dotenv() {
+        Ok(_) => {}
+        Err(dotenvy::Error::Io(e)) if e.kind() == std::io::ErrorKind::NotFound => {}
+        Err(_) => anyhow::bail!(
+            "Invalid .env file; quote values containing spaces and check dotenv syntax"
+        ),
+    }
 
     tracing_subscriber::registry()
         .with(EnvFilter::from_default_env())

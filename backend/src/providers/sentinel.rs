@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::Result;
 use base64::{engine::general_purpose::STANDARD as B64, Engine};
 use serde::{Deserialize, Serialize};
 
@@ -56,10 +56,7 @@ pub async fn fetch_snapshot(
         .send()
         .await?;
 
-    if !resp.status().is_success() {
-        let status = resp.status();
-        bail!("Sentinel API error {}", status);
-    }
+    let resp = resp.error_for_status()?;
 
     let bytes = resp.bytes().await?;
     let image_b64 = Some(B64.encode(&bytes));
