@@ -178,3 +178,26 @@ git push origin main
 ```
 
 References: [Render Blueprint specification](https://render.com/docs/blueprint-spec), [free-plan limits](https://render.com/docs/free), [Render WebSockets](https://render.com/docs/websocket), [Vercel monorepos](https://vercel.com/docs/monorepos), [Copernicus authentication](https://documentation.dataspace.copernicus.eu/APIs/SentinelHub/Overview/Authentication.html).
+
+### Live deployment: empty flight or vessel lists
+
+The deployed backend origin is `https://biq-backend-qwb4.onrender.com`.
+Set Vercel's `NEXT_PUBLIC_API_URL` to that origin and redeploy after changing it.
+If explicitly setting `NEXT_PUBLIC_WS_URL`, use
+`wss://biq-backend-qwb4.onrender.com/ws/live`.
+
+A successful `/health` response confirms service availability; inspect
+`providers.*.runtime` separately for upstream ingestion failures. Empty track
+arrays can mean ingestion failed even when Redis, CORS and the frontend work.
+
+In Render → **biq-backend → Logs**, inspect `AISstream disconnected` and
+`OpenSky request failed`. AISstream logs distinguish handshake failures from
+failures after subscription. Subscription error payloads are deliberately not
+logged because they may contain credentials. Reconnects back off up to five
+minutes plus jitter. OpenSky transport failures now identify timeouts versus
+connection failures, with underlying diagnostics in server logs.
+
+AISstream permits three subscribed connections per account and three open
+connections per originating IP. Stop unused local or old hosted consumers when
+investigating limits. A reset alone does not establish that a key is invalid or
+that Render is blocked. See [AISstream's limits and troubleshooting](https://aisstream.io/documentation).

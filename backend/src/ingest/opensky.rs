@@ -21,6 +21,7 @@ async fn run(state: Arc<AppState>) {
     let poll_secs = cfg.quiet_poll_seconds.max(10); // OpenSky minimum 10s anonymous
     let mut ticker = interval(Duration::from_secs(poll_secs));
 
+    ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     let client = &state.http;
     let mut token: Option<(String, std::time::Instant)> = None;
 
@@ -95,10 +96,16 @@ async fn run(state: Arc<AppState>) {
                     tokio::time::sleep(Duration::from_secs(300)).await;
                 }
             }
-            Err(_) => {
-                state
-                    .provider_result("opensky", false, "Request failed")
-                    .await;
+            Err(e) => {
+                let detail = if e.is_timeout() {
+                    "Request timed out"
+                } else if e.is_connect() {
+                    "Connection failed (DNS, TCP or TLS); see server logs"
+                } else {
+                    "Request transport failed; see server logs"
+                };
+                tracing::warn!("OpenSky request failed: {:?}", e.without_url());
+                state.provider_result("opensky", false, detail).await;
             }
         }
     }
