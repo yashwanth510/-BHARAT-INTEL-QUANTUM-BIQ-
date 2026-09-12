@@ -20,7 +20,15 @@ pub struct AppState {
 impl AppState {
     pub async fn new(cfg: Config) -> Result<Self> {
         let client = redis::Client::open(cfg.redis_url.clone())?;
-        let redis = ConnectionManager::new(client).await?;
+        let redis = ConnectionManager::new_with_backoff_and_timeouts(
+            client,
+            2,
+            100,
+            1,
+            std::time::Duration::from_secs(2),
+            std::time::Duration::from_secs(2),
+        )
+        .await?;
 
         let borders = BorderStore::load(&cfg.border_data_dir)?;
         let geofence = Arc::new(GeofenceEngine::build(
