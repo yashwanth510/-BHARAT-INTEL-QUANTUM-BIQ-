@@ -1,0 +1,349 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "india_maritime_arabian_sea",
+        "name": "Arabian Sea EEZ Corridor",
+        "type": "maritime",
+        "accuracy": "illustrative"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            68.1,
+            23.0
+          ],
+          [
+            67.0,
+            22.0
+          ],
+          [
+            66.0,
+            21.0
+          ],
+          [
+            65.0,
+            20.0
+          ],
+          [
+            64.5,
+            19.0
+          ],
+          [
+            64.0,
+            18.0
+          ],
+          [
+            63.5,
+            17.0
+          ],
+          [
+            63.5,
+            16.0
+          ],
+          [
+            64.0,
+            15.0
+          ],
+          [
+            65.0,
+            14.0
+          ],
+          [
+            66.5,
+            13.0
+          ],
+          [
+            68.0,
+            12.0
+          ],
+          [
+            70.0,
+            11.5
+          ],
+          [
+            72.0,
+            11.0
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "india_maritime_gujarat",
+        "name": "Gujarat Maritime Approach",
+        "type": "maritime",
+        "accuracy": "illustrative"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            68.7,
+            23.7
+          ],
+          [
+            68.5,
+            22.8
+          ],
+          [
+            68.0,
+            22.0
+          ],
+          [
+            67.5,
+            21.5
+          ],
+          [
+            67.0,
+            21.0
+          ],
+          [
+            66.5,
+            20.5
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "india_maritime_west_coast",
+        "name": "West Coast / Lakshadweep Sea",
+        "type": "maritime",
+        "accuracy": "illustrative"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            72.0,
+            11.0
+          ],
+          [
+            72.5,
+            13.0
+          ],
+          [
+            72.8,
+            15.0
+          ],
+          [
+            73.0,
+            17.0
+          ],
+          [
+            73.0,
+            18.5
+          ],
+          [
+            72.8,
+            20.0
+          ],
+          [
+            72.6,
+            21.5
+          ],
+          [
+            72.0,
+            22.5
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "india_maritime_bay_of_bengal",
+        "name": "Bay of Bengal EEZ Corridor",
+        "type": "maritime",
+        "accuracy": "illustrative"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            80.0,
+            13.0
+          ],
+          [
+            81.0,
+            12.0
+          ],
+          [
+            82.0,
+            11.0
+          ],
+          [
+            83.0,
+            10.0
+          ],
+          [
+            84.0,
+            9.5
+          ],
+          [
+            85.0,
+            9.0
+          ],
+          [
+            86.0,
+            9.0
+          ],
+          [
+            87.0,
+            10.0
+          ],
+          [
+            88.0,
+            11.0
+          ],
+          [
+            88.5,
+            12.0
+          ],
+          [
+            89.0,
+            13.5
+          ],
+          [
+            89.5,
+            15.0
+          ],
+          [
+            90.0,
+            17.0
+          ],
+          [
+            90.3,
+            18.5
+          ],
+          [
+            90.1,
+            20.0
+          ],
+          [
+            89.5,
+            21.7
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "india_maritime_andaman",
+        "name": "Andaman Sea Approaches",
+        "type": "maritime",
+        "accuracy": "illustrative"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            92.0,
+            13.5
+          ],
+          [
+            92.5,
+            12.5
+          ],
+          [
+            93.0,
+            11.5
+          ],
+          [
+            93.5,
+            10.5
+          ],
+          [
+            94.0,
+            9.5
+          ],
+          [
+            94.5,
+            9.0
+          ],
+          [
+            95.0,
+            9.5
+          ],
+          [
+            95.5,
+            10.5
+          ],
+          [
+            95.5,
+            12.0
+          ],
+          [
+            95.0,
+            13.5
+          ],
+          [
+            94.5,
+            14.5
+          ],
+          [
+            93.5,
+            15.0
+          ],
+          [
+            92.5,
+            14.5
+          ],
+          [
+            92.0,
+            13.5
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "india_maritime_sri_lanka_channel",
+        "name": "Palk Strait / Sri Lanka Channel",
+        "type": "maritime",
+        "accuracy": "illustrative"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            79.5,
+            9.5
+          ],
+          [
+            80.0,
+            9.0
+          ],
+          [
+            80.5,
+            8.6
+          ],
+          [
+            81.0,
+            8.5
+          ],
+          [
+            81.5,
+            8.8
+          ],
+          [
+            81.8,
+            9.2
+          ]
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "accuracy": "illustrative",
+    "source": "Legacy hand-drawn prototype; not authoritative international boundaries or EEZ"
+  }
+}

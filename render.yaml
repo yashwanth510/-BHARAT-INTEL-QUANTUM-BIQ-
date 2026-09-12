@@ -1,0 +1,56 @@
+# Create a Render Blueprint from this repository. Both services use free plans.
+services:
+  - type: web
+    name: biq-backend
+    runtime: rust
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    buildCommand: bash build.sh
+    startCommand: ./bin/biq-backend
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: biq-cache
+          property: connectionString
+      - key: CORS_ORIGINS
+        value: https://bharat-intel-quantum-biq.vercel.app
+      - key: RUST_LOG
+        value: info
+      - key: ADMIN_API_TOKEN
+        generateValue: true
+      - key: GPS_WEBHOOK_TOKEN
+        generateValue: true
+      - key: OPENSKY_BBOX
+        value: 5.0,38.0,65.0,100.0
+      - key: QUIET_POLL_SECONDS
+        value: "60"
+      - key: AISSTREAM_BBOXES
+        value: '[[[5.0,65.0],[38.0,100.0]]]'
+      - key: AISSTREAM_API_KEY
+        sync: false
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: GEOAPIFY_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: TAVILY_MAX_PER_DAY
+        value: "33"
+      - key: SENTINEL_CLIENT_ID
+        sync: false
+      - key: SENTINEL_CLIENT_SECRET
+        sync: false
+      - key: SENTINEL_TOKEN_URL
+        value: https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token
+      - key: SENTINEL_PROCESS_URL
+        value: https://sh.dataspace.copernicus.eu/api/v1/process
+  - type: keyvalue
+    name: biq-cache
+    plan: free
+    region: frankfurt
+    ipAllowList: []
+    maxmemoryPolicy: noeviction

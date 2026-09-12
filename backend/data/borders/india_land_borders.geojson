@@ -1,0 +1,511 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "india_pakistan_loc",
+        "name": "India\u2013Pakistan (LoC/IB)",
+        "type": "land",
+        "accuracy": "illustrative"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            73.9,
+            36.9
+          ],
+          [
+            74.5,
+            36.5
+          ],
+          [
+            74.8,
+            35.9
+          ],
+          [
+            74.6,
+            35.0
+          ],
+          [
+            74.3,
+            34.3
+          ],
+          [
+            73.8,
+            33.5
+          ],
+          [
+            73.5,
+            32.5
+          ],
+          [
+            72.9,
+            31.8
+          ],
+          [
+            72.3,
+            30.9
+          ],
+          [
+            71.9,
+            30.2
+          ],
+          [
+            71.5,
+            29.5
+          ],
+          [
+            70.8,
+            28.5
+          ],
+          [
+            70.2,
+            27.7
+          ],
+          [
+            69.5,
+            26.8
+          ],
+          [
+            68.9,
+            25.9
+          ],
+          [
+            68.2,
+            24.7
+          ],
+          [
+            67.8,
+            23.8
+          ],
+          [
+            68.1,
+            23.0
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "india_pakistan_sir_creek",
+        "name": "Sir Creek",
+        "type": "land",
+        "accuracy": "illustrative"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            68.1,
+            23.0
+          ],
+          [
+            68.4,
+            23.5
+          ],
+          [
+            68.7,
+            23.7
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "india_china_lac",
+        "name": "India\u2013China LAC",
+        "type": "land",
+        "accuracy": "illustrative"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            78.7,
+            35.5
+          ],
+          [
+            79.0,
+            34.9
+          ],
+          [
+            79.5,
+            34.3
+          ],
+          [
+            79.9,
+            33.7
+          ],
+          [
+            80.3,
+            33.2
+          ],
+          [
+            80.9,
+            32.6
+          ],
+          [
+            81.4,
+            32.2
+          ],
+          [
+            82.0,
+            31.8
+          ],
+          [
+            82.7,
+            31.5
+          ],
+          [
+            83.2,
+            30.9
+          ],
+          [
+            83.8,
+            30.3
+          ],
+          [
+            84.5,
+            29.8
+          ],
+          [
+            85.1,
+            29.5
+          ],
+          [
+            85.8,
+            29.2
+          ],
+          [
+            86.5,
+            28.9
+          ],
+          [
+            87.2,
+            28.7
+          ],
+          [
+            87.9,
+            28.4
+          ],
+          [
+            88.5,
+            28.1
+          ],
+          [
+            89.0,
+            27.8
+          ],
+          [
+            89.7,
+            27.6
+          ],
+          [
+            90.3,
+            27.5
+          ],
+          [
+            91.0,
+            27.4
+          ],
+          [
+            92.0,
+            27.2
+          ],
+          [
+            93.0,
+            27.1
+          ],
+          [
+            94.0,
+            27.1
+          ],
+          [
+            95.0,
+            27.2
+          ],
+          [
+            96.0,
+            27.3
+          ],
+          [
+            97.0,
+            27.5
+          ],
+          [
+            97.5,
+            28.0
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "india_nepal",
+        "name": "India\u2013Nepal",
+        "type": "land",
+        "accuracy": "illustrative"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            80.1,
+            30.0
+          ],
+          [
+            80.6,
+            29.8
+          ],
+          [
+            81.2,
+            29.6
+          ],
+          [
+            82.0,
+            29.4
+          ],
+          [
+            82.7,
+            29.3
+          ],
+          [
+            83.5,
+            29.1
+          ],
+          [
+            84.2,
+            28.9
+          ],
+          [
+            84.9,
+            28.7
+          ],
+          [
+            85.8,
+            28.5
+          ],
+          [
+            86.6,
+            28.2
+          ],
+          [
+            87.2,
+            27.9
+          ],
+          [
+            88.0,
+            27.6
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "india_bhutan",
+        "name": "India\u2013Bhutan",
+        "type": "land",
+        "accuracy": "illustrative"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            88.8,
+            27.1
+          ],
+          [
+            89.3,
+            27.0
+          ],
+          [
+            89.7,
+            26.9
+          ],
+          [
+            90.2,
+            26.8
+          ],
+          [
+            90.7,
+            26.9
+          ],
+          [
+            91.2,
+            27.0
+          ],
+          [
+            91.6,
+            27.1
+          ],
+          [
+            92.1,
+            27.0
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "india_bangladesh",
+        "name": "India\u2013Bangladesh",
+        "type": "land",
+        "accuracy": "illustrative"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            88.1,
+            26.4
+          ],
+          [
+            88.5,
+            26.2
+          ],
+          [
+            89.0,
+            26.0
+          ],
+          [
+            89.5,
+            25.8
+          ],
+          [
+            90.0,
+            25.6
+          ],
+          [
+            90.5,
+            25.4
+          ],
+          [
+            91.0,
+            25.2
+          ],
+          [
+            91.5,
+            25.0
+          ],
+          [
+            92.0,
+            24.8
+          ],
+          [
+            92.3,
+            24.5
+          ],
+          [
+            92.4,
+            23.9
+          ],
+          [
+            92.2,
+            23.3
+          ],
+          [
+            91.9,
+            22.7
+          ],
+          [
+            91.5,
+            22.2
+          ],
+          [
+            91.0,
+            22.0
+          ],
+          [
+            90.5,
+            21.9
+          ],
+          [
+            90.1,
+            21.7
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "india_myanmar",
+        "name": "India\u2013Myanmar",
+        "type": "land",
+        "accuracy": "illustrative"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            97.5,
+            28.0
+          ],
+          [
+            97.3,
+            27.5
+          ],
+          [
+            97.0,
+            26.9
+          ],
+          [
+            96.8,
+            26.3
+          ],
+          [
+            96.5,
+            25.7
+          ],
+          [
+            96.1,
+            25.0
+          ],
+          [
+            95.8,
+            24.3
+          ],
+          [
+            95.4,
+            23.8
+          ],
+          [
+            94.9,
+            23.2
+          ],
+          [
+            94.5,
+            22.6
+          ],
+          [
+            94.2,
+            22.0
+          ],
+          [
+            93.9,
+            21.5
+          ],
+          [
+            93.6,
+            21.0
+          ],
+          [
+            93.2,
+            20.6
+          ]
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "accuracy": "illustrative",
+    "source": "Legacy hand-drawn prototype; not authoritative international boundaries or EEZ"
+  }
+}

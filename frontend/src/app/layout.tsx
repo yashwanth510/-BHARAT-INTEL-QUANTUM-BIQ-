@@ -1,27 +1,15 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { AppProviders } from "@/providers/AppProviders";
-
-const inter = Inter({ subsets: ["latin"] });
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "BHARAT INTEL QUANTUM | BIQ",
-  description: "AI-Powered Tactical Intelligence Fusion Platform",
+  title: 'BIQ — Bharat Intel Quantum',
+  description: 'Map-first India border surveillance',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} antialiased bg-background text-foreground overflow-hidden`}>
-        <AppProviders>
-          {children}
-        </AppProviders>
-      </body>
+    <html lang="en">
+      <body>{children}</body>
     </html>
   );
 }

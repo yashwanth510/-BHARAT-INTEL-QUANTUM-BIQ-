@@ -1,179 +1,70 @@
-/**
- * BIQ API Client — typed wrappers around all backend endpoints.
- * Uses Next.js rewrites in dev; nginx proxy in production.
- * All calls include timeout + error normalisation.
- */
+export const BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "https://bharat-intel-quantum-biq-production.up.railway.app";
-const TIMEOUT_MS = 15_000;
-
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(`${BASE}${path}`, {
-      ...init,
-      signal: controller.signal,
-    });
-    clearTimeout(id);
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`[BIQ API] ${path} → HTTP ${res.status}: ${body}`);
-    }
-    return res.json() as Promise<T>;
-  } catch (err) {
-    clearTimeout(id);
-    throw err;
+async function request(url: string, options?: RequestInit) {
+  const response = await fetch(url, { ...options, signal: AbortSignal.timeout(120000) });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.error || `Request failed (${response.status})`);
   }
+  return response;
 }
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
-export interface ProviderStatus {
-  provider: string;
-  status: string;
-  details?: string;
+export async function fetchFlights() {
+  const r = await request(`${BASE}/api/flights`);
+  if (!r.ok) throw new Error('flights fetch failed');
+  return r.json();
 }
 
-export interface HealthResponse {
-  status: string;
-  integrity: string;
-  services: number;
-  providers: ProviderStatus[];
+export async function fetchVessels() {
+  const r = await request(`${BASE}/api/vessels`);
+  if (!r.ok) throw new Error('vessels fetch failed');
+  return r.json();
 }
 
-export interface FusionResult {
-  score: number;
-  risk: string;
-  recommendations: string[];
+export async function fetchVehicles() {
+  const r = await request(`${BASE}/api/vehicles`);
+  if (!r.ok) throw new Error('vehicles fetch failed');
+  return r.json();
 }
 
-export interface UnifiedIntelligenceResponse {
-  correlation_id: string;
-  location: string;
-  news: unknown;
-  maritime: unknown;
-  weather: unknown;
-  satellite: unknown;
-  fusion: FusionResult;
-  strategic_synthesis?: string;
-  metadata: {
-    freshness: string;
-    confidence: number;
-    integrity_score: number;
-  };
+export async function fetchAnomalies() {
+  const r = await request(`${BASE}/api/anomalies`);
+  if (!r.ok) throw new Error('anomalies fetch failed');
+  return r.json();
 }
 
-export interface OpsLogEntry {
-  timestamp: string;
-  category: string;
-  event: string;
-  detail: string;
+export async function fetchBorders() {
+  const r = await request(`${BASE}/api/borders`);
+  if (!r.ok) throw new Error('borders fetch failed');
+  return r.json();
 }
 
-export interface GraphData {
-  nodes: Array<{
-    id: string;
-    label: string;
-    type: string;
-    name: string;
-    properties?: Record<string, unknown>;
-  }>;
-  edges: Array<{
-    source: string;
-    target: string;
-    label: string;
-  }>;
+export async function fetchWeather(lat: number, lon: number) {
+  const r = await request(`${BASE}/api/weather?lat=${lat}&lon=${lon}`);
+  if (!r.ok) throw new Error('weather fetch failed');
+  return r.json();
 }
 
-export interface MaritimeThreat {
-  mmsi: string;
-  vessel_name: string;
-  lat: number;
-  lon: number;
-  status: string;
-  dark: boolean;
-  timestamp: string;
+export async function fetchSatellite(lat: number, lon: number) {
+  const r = await request(`${BASE}/api/satellite/snapshot`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lat, lon }),
+  });
+  if (!r.ok) throw new Error('satellite fetch failed');
+  return r.json();
 }
 
-export interface ThreatCorrelation {
-  correlation_id: string;
-  score: number;
-  risk_score: number;
-  level: string;
-  explanation: string;
-  key_actors: string[];
-  key_locations: string[];
+export async function fetchOsint(lat: number, lon: number, entity?: string) {
+  const r = await request(`${BASE}/api/osint/enrich`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lat, lon, entity }),
+  });
+  if (!r.ok) throw new Error('osint fetch failed');
+  return r.json();
 }
 
-// ── Endpoints ────────────────────────────────────────────────────────────────
-
-export const api = {
-  /** System health + provider reachability */
-  health: () => apiFetch<HealthResponse>("/health"),
-
-  /** Quantum system status */
-  quantumHealth: () => apiFetch<Record<string, string>>("/quantum-health"),
-
-  /** Scheduler & quota metrics */
-  metrics: () => apiFetch<Record<string, unknown>>("/metrics"),
-
-  /** Operations log (last N entries) */
-  opsLog: () =>
-    apiFetch<{ entries: OpsLogEntry[]; count: number }>("/ops-log"),
-
-  /** Unified AI intelligence (multi-source fusion) */
-  intelligence: (query = "latest border activity") =>
-    apiFetch<UnifiedIntelligenceResponse>(
-      `/api/intelligence?query=${encodeURIComponent(query)}`
-    ),
-
-  /** OSINT threat correlation (Mistral) */
-  threatCorrelation: (query = "latest border activity") =>
-    apiFetch<ThreatCorrelation>(
-      `/api/threat-correlation?query=${encodeURIComponent(query)}`
-    ),
-
-  /** Maritime domain awareness */
-  maritimeThreats: () =>
-    apiFetch<{ results: MaritimeThreat[]; status: string }>(
-      "/maritime-threats"
-    ),
-
-  /** News-based threat signals */
-  newsThreats: () => apiFetch<{ results: unknown[]; status: string }>("/news-threats"),
-
-  /** Weather tactical layer */
-  weatherThreats: () =>
-    apiFetch<{ results: unknown[]; status: string }>("/weather-threats"),
-
-  /** Sentinel / satellite alerts */
-  satelliteAlerts: () =>
-    apiFetch<{ results: unknown[]; status: string }>("/satellite-alerts"),
-
-  /** ML anomaly scoring */
-  mlAnomaly: () => apiFetch<Record<string, unknown>>("/ml-anomaly"),
-
-  /** Pakistan border threat cache */
-  pakistanThreats: () => apiFetch<unknown[]>("/pakistan-threats"),
-
-  /** China border threat cache */
-  chinaThreats: () => apiFetch<unknown[]>("/china-threats"),
-
-  /** Crypto / financial intelligence */
-  cryptoThreats: () =>
-    apiFetch<{ results: unknown[]; status: string }>("/crypto-threats"),
-
-  /** Neo4j knowledge graph export */
-  graphData: () => apiFetch<GraphData>("/api/graph/data"),
-
-  /** Strike analysis */
-  strikeAnalysis: (target: string) =>
-    apiFetch<Record<string, unknown>>(
-      `/api/tactical/strike-analysis?target=${encodeURIComponent(target)}`
-    ),
-
-  /** Border penetration risk */
-  borderPenetration: () =>
-    apiFetch<Record<string, unknown>>("/api/tactical/border-penetration"),
-};
+export async function fetchLocation(lat: number, lon: number) {
+  return (await request(`${BASE}/api/location?lat=${lat}&lon=${lon}`)).json();
+}
